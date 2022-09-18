@@ -10,6 +10,10 @@ import astral
 from astral.geocoder import database, lookup
 from astral.sun import sun
 import pytz
+from signal import signal, SIGPIPE, SIG_DFL  
+
+signal(SIGPIPE,SIG_DFL)
+
 
 def isDay(filename,city):
     t=os.path.basename(filename)
@@ -40,7 +44,7 @@ if __name__ == '__main__':
             filename = os.path.join(root, filename)
             if os.path.isfile(filename):            
                 if isDay(filename,city):
-                    print(filename)
+                    print("file " + filename)
 
 
 
