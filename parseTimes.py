@@ -20,8 +20,9 @@ def parseTime(filename):
     t = datetime.strptime(t, '%b-%d-%Y_%H%M')
     return t
 
+
 def isDay(filename, city, hourBuffer):
-    t=parseTime(filename)
+    t = parseTime(filename)
     timezone = pytz.timezone(city.timezone)
     t = timezone.localize(t)
     s = sun(city.observer, date=t)
@@ -35,13 +36,18 @@ if __name__ == '__main__':
     ext = sys.argv[2]
     city = lookup(sys.argv[3], database())
     hourBuffer = sys.argv[4]
-
+    selectedFiles = []
     for root, dirs, files in os.walk(dir):
         for filename in fnmatch.filter(files, ext):
             filename = os.path.join(root, filename)
             if os.path.isfile(filename):
                 if isDay(filename, city, hourBuffer):
-                    print("file " + filename)
+                    selectedFiles.append(filename)
+    selectedFiles.sort(key=parseTime)
+    for filename in selectedFiles:
+        print("file " + filename)
+
+
 
 
 
