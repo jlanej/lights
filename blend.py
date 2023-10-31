@@ -37,3 +37,4 @@ if __name__ == '__main__':
     blended = blend(images)
     cv2.imwrite(dir_out_img+"test.jpg", blended, [cv2.IMWRITE_JPEG_QUALITY, 95])
 
+

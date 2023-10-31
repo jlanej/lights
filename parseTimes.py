@@ -1,6 +1,3 @@
-#!/usr/bin/python
-
-
 import sys
 import os
 import fnmatch
@@ -24,7 +21,7 @@ def bufferFromSunriseSunset(s,t,buf):
     return s['sunrise']+buf < t < s['sunset']-buf
 
 def bufferFromMidday(s,t,buf):
-    midday=s['sunrise'] + (s['sunset']-s['sunrise'])/2
+    midday = s['sunrise'] + (s['sunset']-s['sunrise'])/2
     return midday-buf < t < midday+buf
 
 def selectForTime(filename, city, hourBuffer,selectType):
@@ -35,27 +32,29 @@ def selectForTime(filename, city, hourBuffer,selectType):
     s = sun(city.observer, date=t)
     buf = timedelta(hours=float(hourBuffer))
 
-    if selectType=="riseset":
+    if selectType == "riseset":
         return bufferFromSunriseSunset(s, t, buf)
-    elif selectType=="midday":
+    elif selectType == "midday":
         return bufferFromMidday(s, t, buf)
 
+
 if __name__ == '__main__':
-    dir = sys.argv[1]
+    directory = sys.argv[1]
     ext = sys.argv[2]
     city = lookup(sys.argv[3], database())
     hourBuffer = sys.argv[4]
-    type=sys.argv[5]
-    if type == "parseSingle":
+    selectType = sys.argv[5]
+    
+    if selectType == "parseSingle":
         if selectForTime(sys.argv[6], city, hourBuffer,"midday"):
             print(sys.argv[6])
     else:
         selectedFiles = []
 
-        for root, dirs, files in os.walk(dir):
+        for root, dirs, files in os.walk(directory):
             for filename in fnmatch.filter(files, ext):
                 filename = os.path.join(root, filename)
-                if selectForTime(filename, city, hourBuffer, type):
+                if selectForTime(filename, city, hourBuffer, selectType):
                     selectedFiles.append(filename)
 
         selectedFiles.sort(key=parseTime)
