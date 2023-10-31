@@ -44,7 +44,7 @@ if __name__ == '__main__':
     city = lookup(sys.argv[3], database())
     hourBuffer = sys.argv[4]
     selectType = sys.argv[5]
-    
+
     if selectType == "parseSingle":
         if selectForTime(sys.argv[6], city, hourBuffer,"midday"):
             print(sys.argv[6])
