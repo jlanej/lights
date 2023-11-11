@@ -17,6 +17,19 @@ def read_image_list(file_list_images):
     return image_list
 
 
+def blend(list_images): # Blend images equally.
+
+    equal_fraction = 1.0 / (len(list_images))
+
+    output = np.zeros_like(list_images[0])
+
+    for img in list_images:
+        output = output + img * equal_fraction
+        # output = cv2.addWeighted(output, 1, img, equal_fraction, 0)
+
+    output = output.astype(np.uint8)
+    return output
+
 def blend_image_list(file_blend):
     images = read_image_list(file_blend)
     blended = blend(images)
