@@ -17,6 +17,9 @@ def parseTime(filename):
     t = datetime.strptime(t, '%b-%d-%Y_%H%M')
     return t
 
+def bufferFromSunset(s,t,buf):
+    return s['sunset']-buf < t < s['sunset']+buf
+
 def bufferFromSunriseSunset(s,t,buf):
     return s['sunrise']+buf < t < s['sunset']-buf
 
@@ -36,6 +39,8 @@ def selectForTime(filename, city, hourBuffer,selectType):
         return bufferFromSunriseSunset(s, t, buf)
     elif selectType == "midday":
         return bufferFromMidday(s, t, buf)
+    elif selectType == "sunset":
+        return bufferFromSunset(s, t, buf)
 
 
 if __name__ == '__main__':

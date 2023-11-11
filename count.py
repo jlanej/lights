@@ -1,13 +1,18 @@
-import sys
+from signal import signal, SIGPIPE, SIG_DFL
+# adding the parent directory to
+# the sys.path.
 import fileinput
 import numpy as np
 import cv2
 import glob
-from parseTimes import *
+import os
+import sys
+import parseTimes
+
 # https://stackoverflow.com/questions/57723968/blending-multiple-images-with-opencv
-from signal import signal, SIGPIPE, SIG_DFL
 
 signal(SIGPIPE, SIG_DFL)
+
 
 def read_image_list(file_list_images):
     image_list = []
@@ -37,26 +42,6 @@ def get_sanitized_name(flist):
 
 if __name__ == '__main__':
     dir_out_img = sys.argv[1]
-    blendEvery = int(sys.argv[2])
-    files_to_blend = []
-    cur_day = ""
-    next_day = ""
     for img in sys.stdin:
         img = img.rstrip()
-
-        if cur_day == "":
-            cur_day = get_day(img)
-
-        if cur_day == get_day(img):
-            files_to_blend.append(img)
-        else:
-            cur_day = ""
-            files_to_blend = []
-
-        if len(files_to_blend) >= blendEvery:
-            output = dir_out_img + get_sanitized_name(files_to_blend)+".jpg"
-            print("file "+output)
-            if not os.path.isfile(output):
-                cv2.imwrite(output, blend_image_list(files_to_blend), [cv2.IMWRITE_JPEG_QUALITY, 95])
-
-            files_to_blend = []
+        print(get_day(img))
