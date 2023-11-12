@@ -56,20 +56,23 @@ if __name__ == '__main__':
     next_day = ""
     for img in sys.stdin:
         img = img.rstrip()
+        if blendEvery > 1:
+            if cur_day == "":
+                cur_day = get_day(img)
 
-        if cur_day == "":
-            cur_day = get_day(img)
+            if cur_day == get_day(img):
+                files_to_blend.append(img)
+            else:
+                cur_day = ""
+                files_to_blend = []
 
-        if cur_day == get_day(img):
-            files_to_blend.append(img)
+            if len(files_to_blend) >= blendEvery:
+                output = dir_out_img + get_sanitized_name(files_to_blend)+".jpg"
+                print("file "+output)
+                if not os.path.isfile(output):
+                    cv2.imwrite(output, blend_image_list(files_to_blend), [cv2.IMWRITE_JPEG_QUALITY, 95])
+
+                files_to_blend = []
+
         else:
-            cur_day = ""
-            files_to_blend = []
-
-        if len(files_to_blend) >= blendEvery:
-            output = dir_out_img + get_sanitized_name(files_to_blend)+".jpg"
-            print("file "+output)
-            if not os.path.isfile(output):
-                cv2.imwrite(output, blend_image_list(files_to_blend), [cv2.IMWRITE_JPEG_QUALITY, 95])
-
-            files_to_blend = []
+            print("file " + img)

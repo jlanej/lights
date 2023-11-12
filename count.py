@@ -13,6 +13,10 @@ import parseTimes
 
 signal(SIGPIPE, SIG_DFL)
 
+# this function takes an image and detects objects in it
+# it returns the image with the detected objects outlined
+def detect_objects(img):
+
 
 def read_image_list(file_list_images):
     image_list = []
