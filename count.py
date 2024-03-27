@@ -14,13 +14,35 @@ from parseTimes import parseTime
 signal(SIGPIPE, SIG_DFL)
 
 
+# download coco.names if it doesn't exist
+def prepare_coco():
+    if not os.path.isfile('coco.names'):
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/pjreddie/darknet/master/data/coco.names",
+                                   "coco.names")
+
+
 # download the weights and cfg files for YOLOv3
+
+# load the coco.names file
+def load_coco():
+    prepare_coco()
+    # load the classes
+    classes = []
+    with open("coco.names", "r") as f:
+        classes = [line.strip() for line in f.readlines()]
+    return classes
+
 
 def prepare_yolo():
     if not os.path.isfile('yolov3.weights'):
         urllib.request.urlretrieve("https://pjreddie.com/media/files/yolov3.weights", "yolov3.weights")
+    else:
+        print("yolov3.weights already exists")
     if not os.path.isfile('yolov3.cfg'):
-        urllib.request.urlretrieve("https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg", "yolov3.cfg")
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg",
+                                   "yolov3.cfg")
+    else:
+        print("yolov3.cfg already exists")
 
 
 # Loads the YOLOv3 model and returns a network object
@@ -39,16 +61,10 @@ def get_yolo():
 # the function takes an image as input and returns a list of bounding boxes
 
 
-def detect_objects(image,network="yolov3"):
-    # load the pre-trained model
-    net = get_yolo()
-    # load the classes
-    classes = []
-    with open("coco.names", "r") as f:
-        classes = [line.strip() for line in f.readlines()]
+def detect_objects(image, net):
     # get the output layer names
     layer_names = net.getLayerNames()
-    output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
+    output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()]
     # get the height and width of the image
     height, width, channels = image.shape
     # create a blob from the image
@@ -61,6 +77,9 @@ def detect_objects(image,network="yolov3"):
     boxes = []
     # create a list to store the confidences
     confidences = []
+
+    # class ids detected
+    class_ids = []
     # loop through the output
     for out in outs:
         # loop through the detections
@@ -72,7 +91,7 @@ def detect_objects(image,network="yolov3"):
             # get the confidence
             confidence = scores[class_id]
             # check if the confidence is greater than 0.5
-            if confidence > 0.5:
+            if confidence > 0.05:
                 # get the center coordinates
                 center_x = int(detection[0] * width)
                 center_y = int(detection[1] * height)
@@ -84,6 +103,7 @@ def detect_objects(image,network="yolov3"):
                 y = int(center_y - h / 2)
                 # append the bounding box and confidence to their lists
                 boxes.append([x, y, w, h])
+                class_ids.append(class_id)
                 confidences.append(float(confidence))
     # apply non-max suppression
     indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4)
@@ -91,10 +111,38 @@ def detect_objects(image,network="yolov3"):
     boxes_nms = []
     # loop through the indexes
     for i in indexes:
+        box_to_append = boxes[i]
+        box_to_append.append(class_ids[i])
         # get the bounding box
-        boxes_nms.append(boxes[i[0]])
+        boxes_nms.append(box_to_append)
     # return the list of bounding boxes
     return boxes_nms
+
+
+# this function takes an image and a list of bounding boxes and draws the bounding boxes on the image
+# it then returns the image with the bounding boxes drawn on it
+def draw_boxes(image, boxes):
+    # load the classes
+    classes = load_coco()
+    # get the height and width of the image
+    height, width, channels = image.shape
+    # loop through the bounding boxes
+    for box in boxes:
+        # get the top left corner
+        class_id = box[4]
+        x = box[0]
+        y = box[1]
+        # get the width and height
+        w = box[2]
+        h = box[3]
+        # draw the bounding box
+        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 1)
+        # put the label text above the bounding box
+        cv2.putText(image, classes[class_id], (x, y - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+    # return the image with the bounding boxes drawn on it
+    return image
+
 
 # parses the time from the filename
 # uses the parseTime function from parseTimes.py
@@ -109,7 +157,19 @@ def get_day(filename):
 
 
 if __name__ == '__main__':
-    for img in sys.stdin:
-        img = img.rstrip()
-        detect_objects(cv2.imread(img))
-        print(get_day(img))
+    # load the pre-trained model
+    net = get_yolo()
+    for img_file in sys.stdin:
+        print("file " + img_file)
+        img_file = img_file.rstrip()
+        img = cv2.imread(img_file)
+        boxes = detect_objects(img, net)
+        if len(boxes) > 0:
+            print(boxes)
+            img = draw_boxes(img, boxes)
+            # display the image
+            cv2.imshow("image", img)
+            # wait for 2 seconds
+            cv2.waitKey(2000)
+        else:
+            print("no objects detected")

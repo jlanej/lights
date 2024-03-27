@@ -9,6 +9,7 @@ from signal import signal, SIGPIPE, SIG_DFL
 
 signal(SIGPIPE, SIG_DFL)
 
+# brew install astral
 
 def parseTime(filename):
     t = os.path.basename(filename)
